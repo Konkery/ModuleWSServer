@@ -28,19 +28,15 @@ class ClassWSServer {
      * Метод создания вебсокет-сервера
      */
     Init() {
-        let page = '<html><body>404 - Not supported format</body></html>';
-
         function pageHandler (req, res) {
             res.writeHead(404, {'Content-Type': 'text/html'});
-            res.end(page);
+            res.end('<html><body>404 - Not supported format</body></html>');
         }
 
         function wsHandler(ws) {
             console.log('Connection established!\nKey: '+ ws.key.hashed);
             this.clients.push(ws);
-            console.log(ws);
             ws.on('message', message => {
-                console.log('Receiving message: '+ message);
                 this.proxy.Receive(message, ws.key.hashed);
             });
             ws.on('close', () => {
@@ -66,9 +62,7 @@ class ClassWSServer {
      */
     Notify(data, keys) {
         this.clients.filter(client => keys.includes(client.key.hashed)).forEach(client => {
-            console.log("Send: " + data);
             client.send(data);
-            console.log("To " + keys);
         });
     }
 }
