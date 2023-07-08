@@ -35,7 +35,9 @@ class ClassWSServer {
 
         function wsHandler(ws) {
             console.log('Connection established!\nKey: '+ ws.key.hashed);
+            ws.RegServices = [];
             this.clients.push(ws);
+
             ws.on('message', message => {
                 this.proxy.Receive(message, ws.key.hashed);
             });
@@ -46,8 +48,8 @@ class ClassWSServer {
                 console.log('Closed ' + ws.key.hashed);
             });
         }
-
-        this.port = (this.port === undefined) ? 8080 : this.port;
+        
+        this.port = 8080 || this.port;
         this.server = require('ws').createServer(pageHandler);
         this.server.listen(this.port);
         console.log('Starting server');
@@ -57,13 +59,12 @@ class ClassWSServer {
      * @method
      * Вызовом этого метода WSS получает данные и список ключей, по которому определяюся клиенты, 
      * которым необходимо отправить данные. 
-     * @param {String} data 
-     * @param {[String]} keys 
+     * @param {Object} data - JSON-объект соответствующий LHP протоколу
      */
-    Notify(data, keys) {
-        this.clients.filter(client => keys.includes(client.key.hashed)).forEach(client => {
-            client.send(data);
-            console.log("Send: " + data);
+    Notify(data) {
+        let service = data.MetaData.RegServices;
+        this.clients.filter(client => client.RegServices.includes(service)).forEach(client => {
+            client.send(JSON.stringify(data));
         });
     }
 }
