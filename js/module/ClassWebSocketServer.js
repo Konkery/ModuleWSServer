@@ -1,3 +1,4 @@
+const ClassProxyWS = require('ModuleProxyWS.min.js');
 /**
  * @class
  * Класс реализует функционал WebSocket-сервера на Espruino
@@ -16,11 +17,11 @@ class ClassWSServer {
             ClassWSServer.prototype.Instance = this;
         }
 
-        this.name = 'ClassWSServer'; //переопределяем имя типа
-        this.server = undefined;
-        this.proxy = new ProxyWS(this);
-        this.port = _port;
-        this.clients = [];
+        this._Name = 'ClassWSServer'; //переопределяем имя типа
+        this._Server = undefined;
+        this._Proxy = new ClassProxyWS(this);
+        this._Port = _port;
+        this._Clients = [];
         this.Init();
 	}
     /**
@@ -36,24 +37,24 @@ class ClassWSServer {
         function wsHandler(ws) {
             console.log('Connection established!\nKey: '+ ws.key.hashed);
             ws.RegServices = [];
-            this.clients.push(ws);
+            this._Clients.push(ws);
 
             ws.on('message', message => {
-                this.proxy.Receive(message, ws.key.hashed);
+                this._Proxy.Receive(message, ws.key.hashed);
             });
             ws.on('close', () => {
-                let index = this.clients.indexOf(ws);
-                this.clients.splice(index,1);
-                this.proxy.RemoveSub(ws.key.hashed);
+                let index = this._Clients.indexOf(ws);
+                this._Clients.splice(index,1);
+                this._Proxy.RemoveSub(ws.key.hashed);
                 console.log('Closed ' + ws.key.hashed);
             });
         }
         
-        this.port = 8080 || this.port;
-        this.server = require('ws').createServer(pageHandler);
-        this.server.listen(this.port);
+        this._Port = 8080 || this._Port;
+        this._Server = require('ws.min.js').createServer(pageHandler);
+        this._Server.listen(this._Port);
         console.log('Starting server');
-        this.server.on('websocket', wsHandler.bind(this));
+        this._Server.on('websocket', wsHandler.bind(this));
     }
     /**
      * @method
@@ -63,7 +64,7 @@ class ClassWSServer {
      */
     Notify(data) {
         let service = data.MetaData.RegServices;
-        this.clients.filter(client => client.RegServices.includes(service)).forEach(client => {
+        this._Clients.filter(client => client.RegServices.includes(service)).forEach(client => {
             client.send(JSON.stringify(data));
         });
     }
